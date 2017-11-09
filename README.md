@@ -1,9 +1,9 @@
 # ine5430-fuzzy
 
 ## Alunos
-### Andrei Donati
-### Igor Yamamoto
-### Luís Felipe Pelison
+Andrei Donati
+Igor Yamamoto
+Luís Felipe Pelison
 
 ## Proposta de trabalho (texto copiado do Moodle da disciplina INE5430)
 Proposta de trabalho prático a nível de graduação sobre sistemas fuzzy, sendo disponibilizada a plataforma necessária para o desenvolvimento do trabalho. O trabalho proposto consiste em desenvolver o controlador fuzzy de um motorista para estacionar um caminhão de ré numa doca, utilizando os conhecimentos sobre sistemas fuzzy adquiridos durante as aulas.

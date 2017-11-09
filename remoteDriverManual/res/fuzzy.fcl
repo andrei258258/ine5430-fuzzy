@@ -11,46 +11,39 @@ FUNCTION_BLOCK driving_truck
 	END_VAR
 
 	VAR_OUTPUT
-	  volante : REAL;
+	  angulo_volante : REAL;
 	END_VAR
 
 
 	// Fuzzyficação do sistema
 	FUZZIFY eixo_x
-	  TERM muito_esquerda   := (0, 1) (0.35, 0.5) (0.5, 0);
-	  TERM pouco_esquerda   := (0, 1) (0.35, 0.5) (0.5, 0);
-	  TERM centro := TRAPE 0.4 0.45 0.55 0.65;
-	  TERM pouco_direita  := (0.5, 0) (0.65, 0.5) (1, 1);
-	  TERM muito_direita  := (0.5, 0) (0.65, 0.5) (1, 1);
+	  TERM esquerda   := (0, 1) (0.08, 1) (0.5, 0);
+	  TERM centro := (0.42, 0) (0.5, 1) (0.58, 0);
+	  TERM direita  := (0.5, 0) (0.92, 1) (1, 1);
 	END_FUZZIFY
 
 	FUZZIFY eixo_y
-	  TERM longe    := TRAPE 0 0.3 0.6 0.8;
-	  TERM perto  := TRAPE 0.6 0.75 0.85 1;
-	  TERM muito_perto  := TRAPE 0.6 0.75 0.85 1;
+	  TERM longe    := (0, 1) (0.85, 1) (1, 0);
+	  TERM perto  := (0.3, 0) (0.85, 1) (1, 1);
 	END_FUZZIFY
 
 	FUZZIFY truck_angle	
-	  TERM norte    := TRIAN 0 87.5 180;
-	  TERM sul      := TRIAN 180 267.5 360;
-	  TERM leste    := (0, 1) (2.5, 1) (90, 0) (270, 0) (357.5, 1) (360, 1);
-	  TERM oeste    := TRIAN 90 177.5 270;
-	  TERM noroeste := TRIAN 90 120 180;
-	  TERM nordeste := TRIAN 0 30 90;
-	  TERM sudeste  := TRIAN 270 300 360;
-	  TERM sudoeste := TRIAN 180 210 270;
+	  TERM norte    := (0, 0) (90, 1) (180, 0);
+	  TERM sul      := (180, 0) (270, 1) (360, 0);
+	  TERM leste    := (90, 0) (180, 1) (270, 0);
+	  TERM oeste    := (0, 1) (90, 0) (270, 0) (360, 1);
 	END_FUZZIFY
 
 
 
 
 	// desfuzzyficação do sistema
-	DEFUZZIFY volante
-	  TERM vira_muito_para_direita := TRIAN -1 -0.8 0;
-	  TERM vira_para_direita := TRIAN -1 -0.8 0;
-	  TERM fica_reto     := TRIAN -0.5 -0.1 0.5;
-	  TERM vira_para_esquerda  := TRIAN 0 0.8 1;
-	  TERM vira_muito_para_esquerda  := TRIAN 0 0.8 1;
+	DEFUZZIFY angulo_volante
+	  TERM vira_muito_para_direita := (0.45, 0) (1, 1);
+	  TERM vira_para_direita := (0, 0) (0.5, 1) (0.9, 0);
+	  TERM fica_reto     := (-0.28, 0) (0, 1) (0.28, 0);
+	  TERM vira_para_esquerda  := (-0.9, 0) (-0.5, 1) (0, 0);
+	  TERM vira_muito_para_esquerda  := (-1, 1) (-0.45, 0);
 	  METHOD             : COG;
 	  DEFAULT            := 0;
 	END_DEFUZZIFY
@@ -61,43 +54,43 @@ FUNCTION_BLOCK driving_truck
 	RULEBLOCK regras
 	  AND  : MIN;     // Usar o min para funcao E
 	  ACT  : MIN;     // Usar o min como metodo de ativação 
+	
+	RULE 1: IF eixo_x IS esquerda AND eixo_y IS longe AND truck_angle IS leste THEN angulo_volante IS vira_para_esquerda;
+    RULE 2: IF eixo_x IS esquerda AND eixo_y IS longe AND truck_angle IS oeste THEN angulo_volante IS vira_para_direita;
+    RULE 3: IF eixo_x IS esquerda AND eixo_y IS longe AND truck_angle IS norte THEN angulo_volante IS vira_para_direita;
+    RULE 4: IF eixo_x IS esquerda AND eixo_y IS longe AND truck_angle IS sul THEN angulo_volante IS vira_para_direita;
+	
+    RULE 5: IF eixo_x IS esquerda AND eixo_y IS perto AND truck_angle IS leste THEN angulo_volante IS vira_muito_para_esquerda;
+    RULE 6: IF eixo_x IS esquerda AND eixo_y IS perto AND truck_angle IS oeste THEN angulo_volante IS vira_muito_para_direita;
+    RULE 7: IF eixo_x IS esquerda AND eixo_y IS perto AND truck_angle IS norte THEN angulo_volante IS vira_muito_para_direita;
+    RULE 8: IF eixo_x IS esquerda AND eixo_y IS perto AND truck_angle IS sul THEN angulo_volante IS vira_muito_para_esquerda;
+
+	
+	
+    RULE 9: IF eixo_x IS centro AND eixo_y IS perto AND truck_angle IS leste THEN angulo_volante IS vira_para_esquerda;
+    RULE 10: IF eixo_x IS centro AND eixo_y IS perto AND truck_angle IS oeste THEN angulo_volante IS vira_para_direita;
+    RULE 11: IF eixo_x IS centro AND eixo_y IS perto AND truck_angle IS norte THEN angulo_volante IS fica_reto;
+    RULE 12: IF eixo_x IS centro AND eixo_y IS perto AND truck_angle IS sul THEN angulo_volante IS vira_muito_para_esquerda;
+	
+	RULE 9: IF eixo_x IS centro AND eixo_y IS longe AND truck_angle IS leste THEN angulo_volante IS vira_para_esquerda;
+    RULE 10: IF eixo_x IS centro AND eixo_y IS longe AND truck_angle IS oeste THEN angulo_volante IS vira_para_direita;
+    RULE 11: IF eixo_x IS centro AND eixo_y IS longe AND truck_angle IS norte THEN angulo_volante IS fica_reto;
+    RULE 12: IF eixo_x IS centro AND eixo_y IS longe AND truck_angle IS sul THEN angulo_volante IS vira_muito_para_esquerda;
+	
+	
+	
+    RULE 13: IF eixo_x IS direita AND eixo_y IS perto AND truck_angle IS leste THEN angulo_volante IS vira_muito_para_esquerda;
+    RULE 14: IF eixo_x IS direita AND eixo_y IS perto AND truck_angle IS oeste THEN angulo_volante IS vira_muito_para_direita;
+    RULE 15: IF eixo_x IS direita AND eixo_y IS perto AND truck_angle IS norte THEN angulo_volante IS vira_para_esquerda;
+    RULE 16: IF eixo_x IS direita AND eixo_y IS perto AND truck_angle IS sul THEN angulo_volante IS vira_muito_para_direita;
+	
+    RULE 17: IF eixo_x IS direita AND eixo_y IS longe AND truck_angle IS leste THEN angulo_volante IS vira_para_esquerda;
+    RULE 18: IF eixo_x IS direita AND eixo_y IS longe AND truck_angle IS oeste THEN angulo_volante IS vira_para_direita;
+    RULE 19: IF eixo_x IS direita AND eixo_y IS longe AND truck_angle IS norte THEN angulo_volante IS vira_para_esquerda;
+    RULE 20: IF eixo_x IS direita AND eixo_y IS longe AND truck_angle IS sul THEN angulo_volante IS vira_muito_para_direita;
 
 
-	  RULE 1  : IF eixo_x IS esquerda AND eixo_y IS perto AND truck_angle IS leste  THEN volante IS vira_para_direita;
-	  RULE 2  : IF eixo_x IS esquerda AND eixo_y IS perto  AND truck_angle IS norte THEN volante IS vira_para_esquerda;
-	  RULE 3  : IF eixo_x IS esquerda AND eixo_y IS perto AND truck_angle IS nordeste THEN volante IS vira_para_direita;
-	  RULE 4  : IF eixo_x IS esquerda AND truck_angle IS noroeste THEN volante IS fica_reto;
-	  RULE 5  : IF eixo_x IS esquerda AND truck_angle IS oeste  THEN volante IS fica_reto;
-	  RULE 6  : IF eixo_x IS esquerda AND truck_angle IS sul THEN volante IS vira_para_direita;
-	  RULE 7  : IF eixo_x IS esquerda AND truck_angle IS sudeste THEN volante IS vira_para_direita;
-	  RULE 8  : IF eixo_x IS esquerda AND truck_angle IS sudoeste THEN volante IS vira_para_direita;
 
-	  RULE 9  : IF eixo_x IS esquerda AND eixo_y IS longe AND truck_angle IS leste  THEN volante IS vira_para_esquerda;
-	  RULE 10  : IF eixo_x IS esquerda AND eixo_y IS longe AND truck_angle IS norte THEN volante IS vira_para_esquerda;
-	  RULE 11  : IF eixo_x IS esquerda AND eixo_y IS longe AND truck_angle IS nordeste THEN volante IS vira_para_esquerda;
-
-	  RULE 12  : IF eixo_x IS centro AND truck_angle IS leste THEN volante IS vira_para_esquerda;
-	  
-	  RULE 13 : IF eixo_x IS centro AND truck_angle IS oeste THEN volante IS vira_para_direita;
-	  RULE 14 : IF eixo_x IS centro AND truck_angle IS nordeste THEN volante IS vira_para_esquerda;
-	  RULE 15 : IF eixo_x IS centro AND truck_angle IS noroeste THEN volante IS vira_para_direita;
-
-	  RULE 16  : IF eixo_x IS direita AND eixo_y IS perto AND truck_angle IS oeste  THEN volante IS vira_para_esquerda;
-	  RULE 17 : IF eixo_x IS direita AND eixo_y IS perto  AND truck_angle IS norte THEN volante IS vira_para_direita;
-	  RULE 18  : IF eixo_x IS direita AND eixo_y IS perto AND truck_angle IS noroeste THEN volante IS vira_para_esquerda;
-	  RULE 19  : IF eixo_x IS direita AND truck_angle IS nordeste THEN volante IS fica_reto;
-	  RULE 20  : IF eixo_x IS direita AND truck_angle IS leste THEN volante IS fica_reto;
-	  RULE 21  : IF eixo_x IS direita AND truck_angle IS sul THEN volante IS vira_para_esquerda;
-	  RULE 22 : IF eixo_x IS direita AND truck_angle IS sudeste THEN volante IS vira_para_esquerda;
-	  RULE 23  : IF eixo_x IS direita AND truck_angle IS sudoeste THEN volante IS vira_para_esquerda;
-	  RULE 24  : IF eixo_x IS direita AND eixo_y IS longe AND truck_angle IS oeste  THEN volante IS vira_para_direita;
-	  RULE 25  : IF eixo_x IS direita AND eixo_y IS longe AND truck_angle IS norte THEN volante IS vira_para_direita;
-	  RULE 26  : IF eixo_x IS direita AND eixo_y IS longe AND truck_angle IS noroeste THEN volante IS vira_para_direita;
-	  
-	  RULE 27 :	IF eixo_x IS centro OR eixo_x IS direita AND truck_angle IS sudeste THEN volante IS vira_para_esquerda;
-	  RULE 28 :	IF eixo_x IS centro OR eixo_x IS direita AND truck_angle IS sudoeste THEN volante IS vira_para_esquerda;
-	  RULE 29 :	IF eixo_x IS centro OR eixo_x IS esquerda AND truck_angle IS sudoeste THEN volante IS vira_para_direita;
-	  RULE 30 :	IF eixo_x IS centro OR eixo_x IS esquerda AND truck_angle IS sudeste THEN volante IS vira_para_direita;
 
 	END_RULEBLOCK
 

@@ -41,72 +41,49 @@ public class RemoteDriver {
         double x, y;
         double angle;
         
-        /*
-		 * FIS is the Fuzzy Interface imported from JFuzzyLogic library
-		 * its used to compute our fuzzy logic.
-		 */
-		String fileName = "res/fuzzy.fcl";
-		FIS fis = FIS.load(fileName, true);
+        /* importando o arquivo de regras Fuzzy*/
+        String fileName = "res/fuzzy.fcl";
+		FIS fz = FIS.load(fileName, true);
 
-		/*
-		 * Suggestion from the documentation.
-		 */
-		if (fis == null) { // Error while loading?
-			System.err.println("Can't load file: '" + fileName + "'");
+		if (fz== null) { // Error while loading?
+			System.err.println("Erro ao ler o arquivo fcl");
 			return;
 		}
 
-		/*
-		 * Request Truck's position.
-		 */
+		/* Requisição da posição do caminhão */
 		out.println("r");
 
+		/* Loop de controle */ 	
+		int passos = 1; 
 		while ((fromServer = in.readLine()) != null) {
-			/*
-			 * This loop will be constantly seeking to make the
-			 * Parking of the Truck. Until this loop runs
-			 * it will send back and forth comunication with the
-			 * Server.java (running somewhere), and then
-			 * this loop needs logic to guide the Truck to the parking
-			 * spot.
-			 *
-			 * We can park the Truck using FCL. More simpler way.
-			 */
+
 			StringTokenizer st = new StringTokenizer(fromServer);
 			x = Double.valueOf(st.nextToken()).doubleValue();
 			y = Double.valueOf(st.nextToken()).doubleValue();
 			angle = Double.valueOf(st.nextToken()).doubleValue();
+		
+			System.out.println("Pos X: " + x + " - Pos Y: " + y + " - Ângulo volante: " + angle);
 
-			System.out.println("x: " + x + " y: " + y + " angle: " + angle);
+			fz.setVariable("eixo_x", x);
+			fz.setVariable("eixo_y", y);
+			fz.setVariable("truck_angle", angle);
 
-			fis.setVariable("x", x);
-			fis.setVariable("y", y);
-			fis.setVariable("angle", angle);
+			fz.evaluate();
 
-			fis.evaluate();
-			/*
-			 * Send driving action ("usando volante").
-			 * See definition for Fuzzy Classes for 'volante'
-			 * at prototype-fuzzy.fcl.
-			 */
-			double offset = fis.getVariable("volante").defuzzify();
-			System.out.println("volante value: " + offset);
+			double volante = fz.getVariable("angulo_volante").defuzzify();
+			System.out.println("Angulo Calculado do Volante: " + volante + "\n");
 
-			/*
-			 * Send driving action ("usando volante").
-			 */
-			out.println(offset);
-
-			/*
-			 * Receive here the Truck Position.
-			 * Just print "r".
-			 */
+			/* Envio dos dados para o o caminhão */
+			out.println(volante);
 			out.println("r");
+			
+			passos = passos +1;
 		}
  
         out.close();
         in.close();
         stdIn.close();
         kkSocket.close();
+        System.out.println("Execução terminada em " + passos + " passos");
     }
 }

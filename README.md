@@ -1,4 +1,6 @@
-# ine5430-fuzzy
+# Universidade Federal de Santa Catarina
+## INE5430 - Controlador Fuzzy para sistema de AutoParking
+
 
 ## Alunos
 Andrei Donati<br /> 
